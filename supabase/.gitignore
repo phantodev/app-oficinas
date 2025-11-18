@@ -1,0 +1,10 @@
+# Arquivos temporários do Supabase
+*.log
+*.tmp
+
+# Arquivos de configuração local (não versionar)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+

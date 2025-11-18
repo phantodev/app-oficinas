@@ -1,0 +1,102 @@
+{
+  "expo": {
+    "name": "app-oficinas",
+    "slug": "app-oficinas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "app-oficinas",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kduburko.appoficinas"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kduburko.appoficinas",
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": ["CAMERA", "RECORD_AUDIO"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "app-oficinas"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ],
+      "expo-secure-store",
+      "expo-video",
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1dfc893c-a3c9-485b-b590-18ba3ebca4bb"
+      },
+      "supabaseUrl": "https://gubapyjusvnadstmkyst.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1YmFweWp1c3ZuYWRzdG1reXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTAyODUsImV4cCI6MjA3ODM4NjI4NX0.1fVlJqLLlz_CwdwCcpEGmWYEaYIJDYt2CHRLGA9C_E8"
+    },
+    "owner": "kduburko",
+    "updates": {
+      "url": "https://u.expo.dev/1dfc893c-a3c9-485b-b590-18ba3ebca4bb"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kduburko.appoficinas"
+      "bundleIdentifier": "com.kduburko.appoficinas",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDZK4XhqbwkkNyCnYUG0JJ4LNEOpJGwxgo"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,6 +27,11 @@
       "package": "com.kduburko.appoficinas",
       "softwareKeyboardLayoutMode": "pan",
       "permissions": ["CAMERA", "RECORD_AUDIO"],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDZK4XhqbwkkNyCnYUG0JJ4LNEOpJGwxgo"
+        }
+      },
       "intentFilters": [
         {
           "action": "VIEW",
@@ -89,7 +97,8 @@
         "projectId": "1dfc893c-a3c9-485b-b590-18ba3ebca4bb"
       },
       "supabaseUrl": "https://gubapyjusvnadstmkyst.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1YmFweWp1c3ZuYWRzdG1reXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTAyODUsImV4cCI6MjA3ODM4NjI4NX0.1fVlJqLLlz_CwdwCcpEGmWYEaYIJDYt2CHRLGA9C_E8"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1YmFweWp1c3ZuYWRzdG1reXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTAyODUsImV4cCI6MjA3ODM4NjI4NX0.1fVlJqLLlz_CwdwCcpEGmWYEaYIJDYt2CHRLGA9C_E8",
+      "googleMapsApiKey": "AIzaSyDZK4XhqbwkkNyCnYUG0JJ4LNEOpJGwxgo"
     },
     "owner": "kduburko",
     "updates": {

@@ -1,8 +1,9 @@
 import { FlashList } from "@shopify/flash-list";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { ChatModal } from "../../components/chat-modal";
+import { supabase } from "../../lib/supabase";
 import { chatService, type Conversation } from "../../services/chat.service";
 
 const ITEMS_PER_PAGE = 20;
@@ -58,6 +59,7 @@ export default function MeuPerfilScreen() {
     id: string;
     email: string;
   } | null>(null);
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -99,6 +101,61 @@ export default function MeuPerfilScreen() {
 
   // Flatten dos dados de todas as páginas
   const conversations = data?.pages.flat() || [];
+
+  // Subscription Realtime para atualizar conversas em tempo real
+  useEffect(() => {
+    console.log("🔔 Iniciando subscription Realtime para conversas");
+
+    // Escutar mudanças na tabela conversations
+    const conversationsChannel = supabase
+      .channel("conversations-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "conversations",
+        },
+        (payload) => {
+          console.log("🔄 Conversa atualizada via Realtime:", payload);
+          // Invalidar query para atualizar a lista
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }
+      )
+      .subscribe((status) => {
+        console.log("📡 Status da subscription de conversas:", status);
+      });
+
+    // Escutar novas mensagens para atualizar last_message nas conversas
+    const messagesChannel = supabase
+      .channel("messages-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          console.log(
+            "📨 Nova mensagem detectada (atualizar conversas):",
+            payload.new
+          );
+          // Invalidar query para atualizar last_message nas conversas
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }
+      )
+      .subscribe((status) => {
+        console.log("📡 Status da subscription de mensagens:", status);
+      });
+
+    // Cleanup: remover subscriptions quando o componente desmontar
+    return () => {
+      console.log("🔕 Removendo subscriptions Realtime");
+      supabase.removeChannel(conversationsChannel);
+      supabase.removeChannel(messagesChannel);
+    };
+  }, [queryClient]);
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {

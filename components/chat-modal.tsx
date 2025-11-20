@@ -1,11 +1,14 @@
 import Feather from "@expo/vector-icons/Feather";
 import { FlashList } from "@shopify/flash-list";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -77,6 +80,9 @@ export function ChatModal({
   onClose,
 }: ChatModalProps) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const queryClient = useQueryClient();
 
   // Obter ID do usuário atual
   useEffect(() => {
@@ -128,12 +134,96 @@ export function ChatModal({
     }
   }, [visible, conversationId]);
 
+  // Subscription para novas mensagens em tempo real
+  useEffect(() => {
+    if (!visible || !conversationId) return;
+
+    console.log("🔔 Iniciando subscription Realtime para mensagens");
+
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          console.log("📨 Nova mensagem recebida via Realtime:", payload.new);
+          // Invalidar query para atualizar a lista
+          queryClient.invalidateQueries({
+            queryKey: ["messages", conversationId],
+          });
+          // Se a mensagem não for minha, marcar como lida
+          if (payload.new.sender_id !== currentUserId) {
+            chatService.markMessagesAsRead(conversationId);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          console.log("🔄 Mensagem atualizada via Realtime:", payload.new);
+          queryClient.invalidateQueries({
+            queryKey: ["messages", conversationId],
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log("📡 Status da subscription:", status);
+      });
+
+    // Cleanup: remover subscription quando o modal fechar
+    return () => {
+      console.log("🔕 Removendo subscription Realtime");
+      supabase.removeChannel(channel);
+    };
+  }, [visible, conversationId, currentUserId, queryClient]);
+
   const messages = data?.pages.flat() || [];
   const displayName = otherParticipantEmail.split("@")[0];
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!conversationId || !messageText.trim() || isSending) return;
+
+    setIsSending(true);
+    try {
+      const result = await chatService.sendMessage(
+        conversationId,
+        messageText.trim()
+      );
+
+      if (result.success) {
+        // Limpar input
+        setMessageText("");
+        // Invalidar queries para atualizar a lista de mensagens e conversas
+        queryClient.invalidateQueries({
+          queryKey: ["messages", conversationId],
+        });
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        // Refetch para atualizar imediatamente
+        refetch();
+      } else {
+        console.error("Erro ao enviar mensagem:", result.error);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -221,7 +311,11 @@ export function ChatModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        className="flex-1 bg-white"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
         {/* Header */}
         <View className="bg-green-500 px-4 py-3 pt-12 flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
@@ -280,7 +374,45 @@ export function ChatModal({
             contentContainerStyle={{ paddingTop: 8, paddingBottom: 20 }}
           />
         )}
-      </View>
+
+        {/* Footer com input e botão de envio */}
+        <View className="border-t border-gray-200 bg-white px-4 py-3">
+          <View className="flex-row items-end">
+            <View className="flex-1 mr-3">
+              <TextInput
+                className="bg-gray-100 rounded-full px-4 py-3 text-base text-gray-900 max-h-24"
+                placeholder="Digite uma mensagem..."
+                placeholderTextColor="#9ca3af"
+                value={messageText}
+                onChangeText={setMessageText}
+                multiline
+                textAlignVertical="center"
+                editable={!isSending}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={handleSendMessage}
+              disabled={!messageText.trim() || isSending}
+              className={`w-12 h-12 rounded-full items-center justify-center ${
+                messageText.trim() && !isSending
+                  ? "bg-green-500"
+                  : "bg-gray-300"
+              }`}
+              activeOpacity={0.7}
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather
+                  name="send"
+                  size={20}
+                  color={messageText.trim() ? "#FFFFFF" : "#9ca3af"}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
